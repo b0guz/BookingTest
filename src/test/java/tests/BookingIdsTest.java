@@ -2,7 +2,9 @@ package tests;
 
 import helpers.PrepareData;
 import helpers.Constructor;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,27 +28,30 @@ public class BookingIdsTest {
     @Test
     public void allBookingIdsNotNullTest() {
 
-        List<PojoBookingIds> listOfAllBookings = request
+        Response response = request
                 .get()
                 .then()
                 .body(matchesJsonSchemaInClasspath("bookingIdsSchema.json"))
-                .extract().body().jsonPath().getList("", PojoBookingIds.class);
+                .extract().response();
 
+        Assertions.assertEquals(HttpStatus.SC_OK, response.statusCode());
+        List<PojoBookingIds> listOfAllBookings = response.body().jsonPath().getList("", PojoBookingIds.class);
         listOfAllBookings.forEach(x-> assertNotNull(x.getBookingid()));
-
     }
 
     @Test
     public void findCreatedBookingInAllBookingIdsTest() {
 
-        int id = Integer.parseInt(PrepareData.createBooking(BASEURL, BOOK));
+        int id = Integer.parseInt(PrepareData.createBookingAndPassId(BASEURL, BOOK));
 
-        List<PojoBookingIds> listOfAllBookings = request
+        Response response = request
                 .get()
                 .then()
                 .body(matchesJsonSchemaInClasspath("bookingIdsSchema.json"))
-                .extract().body().jsonPath().getList("", PojoBookingIds.class);
+                .extract().response();
 
+        Assertions.assertEquals(HttpStatus.SC_OK, response.statusCode());
+        List<PojoBookingIds> listOfAllBookings = response.body().jsonPath().getList("", PojoBookingIds.class);
         Assertions.assertTrue(listOfAllBookings.stream().anyMatch(obj ->
                 obj.getBookingid().equals(id)));
     }
@@ -54,14 +59,16 @@ public class BookingIdsTest {
     @Test
     public void notFoundDeletedBookingInAllBookingIdsTest() {
 
-        String id = PrepareData.deleteBookingById(BASEURL, BOOK);
+        String id = PrepareData.deleteBookingAndPassId(BASEURL, BOOK);
 
-        List<PojoBookingIds> listOfAllBookings = request
+        Response response = request
                 .get()
                 .then()
                 .body(matchesJsonSchemaInClasspath("bookingIdsSchema.json"))
-                .extract().body().jsonPath().getList("", PojoBookingIds.class);
+                .extract().response();
 
+        Assertions.assertEquals(HttpStatus.SC_OK, response.statusCode());
+        List<PojoBookingIds> listOfAllBookings = response.body().jsonPath().getList("", PojoBookingIds.class);
         Assertions.assertFalse(listOfAllBookings.stream().anyMatch(obj ->
                 obj.getBookingid().equals(Integer.parseInt(id))));
     }

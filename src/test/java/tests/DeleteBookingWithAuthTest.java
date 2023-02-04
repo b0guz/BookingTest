@@ -11,41 +11,39 @@ import org.junit.jupiter.api.Test;
 
 import static constants.Constants.*;
 
-public class DeleteBookingTest {
+public class DeleteBookingWithAuthTest {
 
     private RequestSpecification request;
+    private final static String token = TOKEN;
+    private String id;
 
     @BeforeEach
     public void setUp() {
         request = new Constructor().newRequest(BASEURL, BOOK);
+        id = PrepareData.createBookingAndPassId(BASEURL, BOOK);
     }
 
     @Test
-    public void deleteBookingTest() {
-
-        String token = PrepareData.createToken(BASEURL, AUTH);
-        String id = PrepareData.createBooking(BASEURL, BOOK);
+    public void deleteBookingWithAuthTest() {
 
         Response response = request
-                .header("Cookie", "token=" + token)
+                .header("Authorization", "Basic " + token)
                 .when()
                 .delete(id)
                 .then()
                 .extract().response();
 
         Assertions.assertEquals(HttpStatus.SC_CREATED, response.statusCode());
-        Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, PrepareData.returnStatusCodeOfGetBooking(BASEURL, BOOK, id));
+        Assertions.assertEquals(HttpStatus.SC_NOT_FOUND, PrepareData.returnResponseOfGetBooking(BASEURL, BOOK, id).statusCode());
     }
 
-
     @Test
-    public void deleteSameBookingAgainTest() {
+    public void deleteSameBookingAgainWithAuthTest() {
 
-        String token = PrepareData.createToken(BASEURL, AUTH);
-        String id = PrepareData.deleteBookingById(BASEURL, BOOK);
+        String id = PrepareData.deleteBookingAndPassId(BASEURL, BOOK);
 
         Response response = request
-                .header("Cookie", "token=" + token)
+                .header("Authorization", "Basic " + token)
                 .when()
                 .delete(id)
                 .then()
@@ -55,12 +53,10 @@ public class DeleteBookingTest {
     }
 
     @Test
-    public void deleteBookingNoIdTest() {
-
-        String token = PrepareData.createToken(BASEURL, BOOK);
+    public void deleteBookingNoIdWithAuthTest() {
 
         Response response = request
-                .header("Cookie", "token=" + token)
+                .header("Authorization", "Basic " + token)
                 .when()
                 .delete()
                 .then()
@@ -70,12 +66,10 @@ public class DeleteBookingTest {
     }
 
     @Test
-    public void deleteBookingNoTokenTest() {
-
-        String id = PrepareData.createBooking(BASEURL, BOOK);
+    public void deleteBookingNoAuthTest() {
 
         Response response = request
-                .header("Cookie", "token=")
+                .header("Authorization", "Basic ")
                 .when()
                 .delete(id)
                 .then()

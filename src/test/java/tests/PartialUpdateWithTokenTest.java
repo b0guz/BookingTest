@@ -13,24 +13,28 @@ import java.util.Map;
 
 import static constants.Constants.BASEURL;
 import static constants.Constants.BOOK;
+import static io.restassured.http.ContentType.JSON;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
-public class PartialUpdateTest {
+public class PartialUpdateWithTokenTest {
 
     private RequestSpecification request;
+    private final String firstname = "Mickey";
+    private String token;
+    private String id;
 
     @BeforeEach
     public void setUp() {
         request = new Constructor().newRequest(BASEURL, BOOK);
+        request.header("Accept", JSON);
+
+        token = PrepareData.createAndPassToken(BASEURL, BOOK);
+        id = PrepareData.createBookingAndPassId(BASEURL, BOOK);
     }
 
     @Test
-    public void partialUpdateNameTest() {
+    public void partialUpdateNameWithTokenTest() {
 
-        String token = PrepareData.createToken(BASEURL, BOOK);
-        String id = PrepareData.createBooking(BASEURL, BOOK);
-
-        String firstname = "Mickey";
         String lastname = "Mouse";
 
         Map<String, Object> booking = new HashMap<>();
@@ -52,10 +56,7 @@ public class PartialUpdateTest {
     }
 
     @Test
-    public void partialUpdateSumAndDatesTest() {
-
-        String token = PrepareData.createToken(BASEURL, BOOK);
-        String id = PrepareData.createBooking(BASEURL, BOOK);
+    public void partialUpdateSumAndDatesWithTokenTest() {
 
         int totalPrice = 777;
         String checkIn = "2023-04-11";
@@ -82,10 +83,7 @@ public class PartialUpdateTest {
     }
 
     @Test
-    public void partialUpdateDepositAndAdditionalNotesTest() {
-
-        String token = PrepareData.createToken(BASEURL, BOOK);
-        String id = PrepareData.createBooking(BASEURL, BOOK);
+    public void partialUpdateDepositAndAdditionalNotesWithTokenTest() {
 
         Boolean depositPaid = false;
         String additionalNeeds = "Drink";
@@ -109,12 +107,9 @@ public class PartialUpdateTest {
     }
 
     @Test
-    public void partialUpdateIdNotExistTest() {
+    public void partialUpdateIdNotExistWithTokenTest() {
 
-        String token = PrepareData.createToken(BASEURL, BOOK);
-        String id = PrepareData.deleteBookingById(BASEURL, BOOK);
-
-        String firstname = "Mickey";
+        String id = PrepareData.deleteBookingAndPassId(BASEURL, BOOK);
 
         Map<String, Object> booking = new HashMap<>();
         booking.put("firstname", firstname);
@@ -131,11 +126,8 @@ public class PartialUpdateTest {
     }
 
     @Test
-    public void partialUpdateNoIdTest() {
+    public void partialUpdateNoIdWithTokenTest() {
 
-        String token = PrepareData.createToken(BASEURL, BOOK);
-
-        String firstname = "Mickey";
         Map<String, Object> booking = new HashMap<>();
         booking.put("firstname", firstname);
 
@@ -153,13 +145,11 @@ public class PartialUpdateTest {
     @Test
     public void partialUpdateNoTokenTest() {
 
-        String id = PrepareData.createBooking(BASEURL, BOOK);
-
-        String firstname = "Mickey";
         Map<String, Object> booking = new HashMap<>();
         booking.put("firstname", firstname);
 
         Response response = request
+                .header("Cookie", "token=" )
                 .body(booking)
                 .when()
                 .patch(id)

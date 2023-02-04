@@ -1,19 +1,18 @@
 package helpers;
 
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.io.File;
 import static org.hamcrest.Matchers.notNullValue;
 import static specs.BookingSpecifications.responseSpecCreated;
-import static specs.BookingSpecifications.responseSpec;
 
 public class PrepareData {
 
     private static RequestSpecification request;
 
-    public static String createBooking(String uri, String path) {
+    public static String createBookingAndPassId(String uri, String path) {
 
         request = new Constructor().newRequest(uri, path);
-        request.response().spec(responseSpec());
 
         File bookingUserData = new File("src/test/resources/bookingUserData.json");
 
@@ -26,15 +25,25 @@ public class PrepareData {
         return id;
     }
 
-    public static String createToken(String uri, String path) {
+    public static void createBooking(String uri, String path) {
 
         request = new Constructor().newRequest(uri, path);
-        request.response().spec(responseSpec());
 
-        File prepareData = new File("src/test/resources/tokenUserData.json");
+        File bookingUserData = new File("src/test/resources/bookingUserData.json");
+
+        request
+                .body(bookingUserData)
+                .post();
+    }
+
+    public static String createAndPassToken(String uri, String path) {
+
+        request = new Constructor().newRequest(uri, path);
+
+        File authData = new File("src/test/resources/tokenUserData.json");
 
         String token = request
-                .body(prepareData)
+                .body(authData)
                 .basePath("auth")
                 .when()
                 .post()
@@ -45,23 +54,23 @@ public class PrepareData {
         return token;
     }
 
-    public static int returnStatusCodeOfGetBooking(String uri, String path, String bookingId) {
+    public static Response returnResponseOfGetBooking(String uri, String path, String bookingId) {
 
         request = new Constructor().newRequest(uri, path);
 
-        int statusCode = request
+        Response response = request
                 .when()
                 .get(bookingId)
                 .then()
-                .extract().statusCode();
+                .extract().response();
 
-        return statusCode;
+        return response;
     }
 
-    public static String deleteBookingById(String uri, String path) {
+    public static String deleteBookingAndPassId(String uri, String path) {
 
-        String token = createToken(uri, path);
-        String id = createBooking(uri, path);
+        String token = createAndPassToken(uri, path);
+        String id = createBookingAndPassId(uri, path);
 
         request = new Constructor().newRequest(uri, path);
 
@@ -73,5 +82,12 @@ public class PrepareData {
                 .then();
 
         return id;
+    }
+
+    public static void generateNBookings(String uri, String path, int testCount) {
+
+        for (int i = 0; i < testCount; i++) {
+            createBooking(uri, path);
+        }
     }
 }
